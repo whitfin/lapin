@@ -1,3 +1,4 @@
+use amq_protocol::uri::AMQPUri;
 use lapin_async;
 use lapin_async::format::frame::Frame;
 use std::default::Default;
@@ -47,6 +48,22 @@ impl Default for ConnectionOptions {
       heartbeat: 0,
     }
   }
+}
+
+impl FromStr for ConnectionOptions {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let uri = AMQPUri::from_str(s)?;
+
+        Ok(ConnectionOptions {
+            username: uri.authority.userinfo.username,
+            password: uri.authority.userinfo.password,
+            vhost: uri.vhost,
+            frame_max: uri.query.frame_max.unwrap_or(0),
+            heartbeat: uri.query.heartbeat.unwrap_or(0),
+        })
+    }
 }
 
 pub type ConnectionConfiguration = lapin_async::connection::Configuration;
